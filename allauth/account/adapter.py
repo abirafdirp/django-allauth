@@ -139,7 +139,7 @@ class DefaultAccountAdapter(object):
     def send_mail(self, template_prefix, email, context):
         msg = self.render_mail(template_prefix, email, context)
 
-        # rather than failing silently, log it
+        # rather than failing loudly, log it
         try:
             msg.send()
         # because there are many email backends, therefore the exceptions
