@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 import re
 import time
 import warnings
@@ -137,7 +138,14 @@ class DefaultAccountAdapter(object):
 
     def send_mail(self, template_prefix, email, context):
         msg = self.render_mail(template_prefix, email, context)
-        msg.send()
+
+        # rather than failing silently, log it
+        try:
+            msg.send()
+        # because there are many email backends, therefore the exceptions
+        # may vary, so let's just catch all exceptions here
+        except Exception as e:
+            logging.error(e)
 
     def get_login_redirect_url(self, request):
         """
