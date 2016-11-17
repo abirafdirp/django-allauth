@@ -28,6 +28,7 @@ except ImportError:
     from django.utils.encoding import force_unicode as force_text
 
 from ..compat import is_authenticated, reverse, validate_password
+from ..exceptions import SendingEmailFailed
 from ..utils import (build_absolute_uri, get_current_site,
                      generate_unique_username,
                      get_user_model, import_attribute,
@@ -146,6 +147,9 @@ class DefaultAccountAdapter(object):
         # may vary, so let's just catch all exceptions here
         except Exception as e:
             logging.error(e)
+            raise SendingEmailFailed(
+                'sending an email failed, see logs for details'
+            )
 
     def get_login_redirect_url(self, request):
         """

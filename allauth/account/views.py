@@ -1,16 +1,18 @@
+from django.apps import apps
 from django.http import (HttpResponseRedirect, Http404,
                          HttpResponsePermanentRedirect)
 from django.views.generic.base import TemplateResponseMixin, View, TemplateView
 from django.views.generic.edit import FormView
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout as auth_logout
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
 from ..compat import is_anonymous, is_authenticated, reverse, reverse_lazy
-from ..exceptions import ImmediateHttpResponse
+from ..exceptions import ImmediateHttpResponse, SendingEmailFailed
 from ..utils import get_form_class, get_request_param, get_current_site
 
 from .utils import (get_next_redirect_url, complete_signup,
@@ -174,7 +176,31 @@ class SignupView(RedirectAuthenticatedUserMixin, CloseableSignupMixin,
 
     @sensitive_post_parameters_m
     def dispatch(self, request, *args, **kwargs):
-        return super(SignupView, self).dispatch(request, *args, **kwargs)
+        try:
+            return super(SignupView, self).dispatch(request, *args, **kwargs)
+        except SendingEmailFailed:
+            # because the user is created first before sending an email
+            # before the exception occurred,
+            # we must delete it again
+            if request.method == 'POST':
+                try:
+                    user_model_str = settings.AUTH_USER_MODEL
+                except NameError:
+                    raise NameError(
+                        'AUTH_USER_MODEL must be defined in your settings file '
+                        'e.g. users.User'
+                    )
+                user_model_str_split = user_model_str.split('.')
+                app_name = user_model_str_split[0]
+                model_name = user_model_str_split[1]
+                user_app = apps.get_app_config(app_name)
+                User = user_app.get_model(model_name)
+                User.objects.get(username=request.POST.get('username')).delete()
+                context = {
+                    'error': 'failed to send email',
+                    **self.get_context_data(),
+                }
+                return render(request, 'account/signup.html', context)
 
     def get_form_class(self):
         return get_form_class(app_settings.FORMS, 'signup', self.form_class)

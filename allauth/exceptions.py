@@ -5,3 +5,11 @@ class ImmediateHttpResponse(Exception):
     """
     def __init__(self, response):
         self.response = response
+
+
+class SendingEmailFailed(Exception):
+    """
+    Used when sending an email is failed, failure can be anything,
+    the error must be logged
+    """
+    pass

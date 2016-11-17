@@ -9,6 +9,7 @@ from django.core import validators
 from django.contrib.auth.tokens import default_token_generator
 
 from ..compat import reverse
+from ..exceptions import SendingEmailFailed
 from ..utils import (set_form_field_order,
                      build_absolute_uri,
                      get_username_max_length,
@@ -506,10 +507,16 @@ class ResetPasswordForm(forms.Form):
             if app_settings.AUTHENTICATION_METHOD \
                     != AuthenticationMethod.EMAIL:
                 context['username'] = user_username(user)
-            get_adapter(request).send_mail(
-                'account/email/password_reset_key',
-                email,
-                context)
+
+            try:
+                get_adapter(request).send_mail(
+                    'account/email/password_reset_key',
+                    email,
+                    context)
+            except SendingEmailFailed:
+                # logging is done in lower level
+                pass
+
         return self.cleaned_data["email"]
 
 
