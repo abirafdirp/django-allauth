@@ -32,12 +32,15 @@ class AppSettings(object):
                 not in (self.AuthenticationMethod.USERNAME,
                         self.AuthenticationMethod.USERNAME_EMAIL)
 
-    def _setting(self, name, dflt):
+    def _setting(self, name, dflt, prefix=None):
         from django.conf import settings
         getter = getattr(settings,
                          'ALLAUTH_SETTING_GETTER',
                          lambda name, dflt: getattr(settings, name, dflt))
-        return getter(self.prefix + name, dflt)
+        if prefix is None:
+            return getter(self.prefix + name, dflt)
+        else:
+            return getter(name, dflt)
 
     @property
     def DEFAULT_HTTP_PROTOCOL(self):
@@ -314,9 +317,6 @@ class AppSettings(object):
         ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME = (
             'ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME'
         )
-        ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT = (
-            'ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT'
-        )
 
         ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT = (
             'ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT'
@@ -324,11 +324,12 @@ class AppSettings(object):
         ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME = (
             'ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME'
         )
-        ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT = (
-            'ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT'
-        )
 
-        use = self._setting('ALLAUTH_USE_MANDRILL_TEMPLATE_EMAIL', False)
+        use = self._setting(
+            'ALLAUTH_USE_MANDRILL_TEMPLATE_EMAIL',
+            False,
+            prefix=''
+        )
 
         if use:
             confirmation_subject = getattr(
@@ -339,11 +340,6 @@ class AppSettings(object):
             confirmation_template_name = getattr(
                 settings,
                 ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME,
-                None
-            )
-            confirmation_template_content = getattr(
-                settings,
-                ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT,
                 None
             )
 
@@ -357,28 +353,19 @@ class AppSettings(object):
                 ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME,
                 None
             )
-            password_reset_template_content = getattr(
-                settings,
-                ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT,
-                None
-            )
             
             if (confirmation_subject is None or
                 confirmation_template_name is None or
-                confirmation_template_content is None or
                 password_reset_subject is None or
-                password_reset_template_name is None or
-                    password_reset_template_content is None):
+                    password_reset_template_name is None):
                 raise ImproperlyConfigured((
                     "If you enable 'ALLAUTH_USE_MANDRILL_TEMPLATE_EMAIL' "
                     "then you must provide these in your settings {} {} {} "
-                    "{} {} {}").format(
+                    "{}").format(
                     ALLAUTH_MANDRILL_CONFIRMATION_SUBJECT,
                     ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME,
-                    ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT,
                     ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT,
-                    ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME,
-                    ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT
+                    ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME
                     )
                 )
         return use

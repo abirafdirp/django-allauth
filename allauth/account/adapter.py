@@ -476,20 +476,30 @@ class DefaultAccountAdapter(object):
                 'EMAIL': '*|EMAIL|*',
                 'ACTIVATE_URL': '*|ACTIVATE_URL|*'
             }
-            if settings.ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT is dict:
+            additional_template_content = getattr(
+                settings,
+                'ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT',
+                None
+            )
+            if additional_template_content is dict:
                 template_content = {
                     **template_content,
-                    **settings.ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT
+                    **additional_template_content
                 }
             global_merge_vars = {
                 'NAME': emailconfirmation.email_address.user.name,
                 'EMAIL': emailconfirmation.email_address.email,
                 'ACTIVATE_URL': activate_url
             }
-            if settings.ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS is dict:
+            additional_global_merge_vars = getattr(
+                settings,
+                'ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS',
+                None
+            )
+            if additional_global_merge_vars is dict:
                 global_merge_vars = {
                     **global_merge_vars,
-                    **settings.ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS
+                    **additional_global_merge_vars
                 }
 
             merge_vars = getattr(
