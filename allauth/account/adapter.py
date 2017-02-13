@@ -151,6 +151,49 @@ class DefaultAccountAdapter(object):
                 'sending an email failed, see logs for details'
             )
 
+    def send_mandrill_template_mail(self, subject, recipient_list,
+                                    template_name,
+                                    template_content=None,
+                                    global_merge_vars=None,
+                                    merge_vars=None,
+                                    from_email=settings.DEFAULT_FROM_EMAIL):
+        """
+        Example usage, None arguments are optional
+        send_mandrill_template_mail(subject='shipped!',
+        recipient_list=['abirafdi.putra@mekar.id, user.email],
+        template_name='SHIPPING_NOTICE',
+        template_content={
+            'TRACKING_BLOCK': "<a href='.../*|TRACKINGNO|*'>track it</a>"
+        }
+        global_merge_vars={
+            'ORDERNO': "12345", 'TRACKINGNO': "1Z987"
+        }
+        merge_vars={
+            'accounting@example.com': {'NAME': user.name},
+            'customer@example.com':   {'NAME': "Kim"}
+        })
+        """
+        msg = EmailMessage(subject=subject, from_email=from_email,
+                           to=recipient_list)
+        msg.template_name = template_name
+
+        if template_content is not None:
+            msg.template_content = template_content
+
+        if global_merge_vars is not None:
+            msg.global_merge_vars = global_merge_vars
+
+        if merge_vars is not None:
+            msg.merge_vars = merge_vars
+
+        try:
+            msg.send(fail_silently=False)
+        except Exception as e:
+            logging.error(e)
+            raise SendingEmailFailed(
+                'sending an email failed, see logs for details'
+            )
+
     def get_login_redirect_url(self, request):
         """
         Returns the default URL to redirect to after logging in.  Note
@@ -426,9 +469,20 @@ class DefaultAccountAdapter(object):
             email_template = 'account/email/email_confirmation_signup'
         else:
             email_template = 'account/email/email_confirmation'
-        self.send_mail(email_template,
-                       emailconfirmation.email_address.email,
-                       ctx)
+
+        if app_settings.USE_MANDRILL_TEMPLATE_EMAIL:
+            self.send_mandrill_template_mail(
+                recipient_list=[emailconfirmation.email_address.email],
+                subject=settings.ALLAUTH_MANDRILL_CONFIRMATION_SUBJECT,
+                template_name=settings.ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME,
+                template_content=settings.ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT,
+                global_merge_vars=settings.ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS,
+                merge_vars=settings.ALLAUTH_MANDRILL_CONFIRMATION_MERGE_VARS
+            )
+        else:
+            self.send_mail(email_template,
+                           emailconfirmation.email_address.email,
+                           ctx)
 
     def respond_user_inactive(self, request, user):
         return HttpResponseRedirect(

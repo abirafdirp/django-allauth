@@ -7,6 +7,7 @@ from django.core import exceptions
 from django.utils.translation import pgettext, ugettext_lazy as _, ugettext
 from django.core import validators
 from django.contrib.auth.tokens import default_token_generator
+from django.conf import settings
 
 from ..compat import reverse
 from ..exceptions import SendingEmailFailed
@@ -509,10 +510,20 @@ class ResetPasswordForm(forms.Form):
                 context['username'] = user_username(user)
 
             try:
-                get_adapter(request).send_mail(
-                    'account/email/password_reset_key',
-                    email,
-                    context)
+                if app_settings.USE_MANDRILL_TEMPLATE_EMAIL:
+                    get_adapter(request).send_mandrill_template_mail(
+                        recipient_list=[email],
+                        subject=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT,
+                        template_name=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME,
+                        template_content=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT,
+                        global_merge_vars=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS,
+                        merge_vars=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS
+                    )
+                else:
+                    get_adapter(request).send_mail(
+                        'account/email/password_reset_key',
+                        email,
+                        context)
             except SendingEmailFailed:
                 # logging is done in lower level
                 pass
