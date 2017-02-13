@@ -511,13 +511,38 @@ class ResetPasswordForm(forms.Form):
 
             try:
                 if app_settings.USE_MANDRILL_TEMPLATE_EMAIL:
+                    template_content = {
+                        'NAME': '*|NAME|*',
+                        'PASSWORD_RESET_URL': '*|PASSWORD_RESET_URL|*'
+                    }
+                    if settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT is dict:
+                        template_content = {
+                            **template_content,
+                            **settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT
+                        }
+                    global_merge_vars = {
+                        'NAME': user.name,
+                        'PASSWORD_RESET_URL': url
+                    }
+                    if settings.ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS is dict:
+                        global_merge_vars = {
+                            **global_merge_vars,
+                            **settings.ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS
+                        }
+
+                    merge_vars = getattr(
+                        settings,
+                        'ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS',
+                        None
+                    )
+
                     get_adapter(request).send_mandrill_template_mail(
                         recipient_list=[email],
                         subject=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT,
                         template_name=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME,
-                        template_content=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT,
-                        global_merge_vars=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS,
-                        merge_vars=settings.ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS
+                        template_content=template_content,
+                        global_merge_vars=global_merge_vars,
+                        merge_vars=merge_vars
                     )
                 else:
                     get_adapter(request).send_mail(

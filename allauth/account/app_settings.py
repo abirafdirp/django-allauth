@@ -317,12 +317,6 @@ class AppSettings(object):
         ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT = (
             'ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT'
         )
-        ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS = (
-            'ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS'
-        )
-        ALLAUTH_MANDRILL_CONFIRMATION_MERGE_VARS = (
-            'ALLAUTH_MANDRILL_CONFIRMATION_MERGE_VARS'
-        )
 
         ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT = (
             'ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT'
@@ -332,12 +326,6 @@ class AppSettings(object):
         )
         ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT = (
             'ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT'
-        )
-        ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS = (
-            'ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS'
-        )
-        ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS = (
-            'ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS'
         )
 
         use = self._setting('ALLAUTH_USE_MANDRILL_TEMPLATE_EMAIL', False)
@@ -358,16 +346,6 @@ class AppSettings(object):
                 ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT,
                 None
             )
-            confirmation_global_merge_vars = getattr(
-                settings,
-                ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS,
-                None
-            )
-            confirmation_merge_vars = getattr(
-                settings,
-                ALLAUTH_MANDRILL_CONFIRMATION_MERGE_VARS,
-                None
-            )
 
             password_reset_subject = getattr(
                 settings,
@@ -384,41 +362,23 @@ class AppSettings(object):
                 ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT,
                 None
             )
-            password_reset_global_merge_vars = getattr(
-                settings,
-                ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS,
-                None
-            )
-            password_reset_merge_vars = getattr(
-                settings,
-                ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS,
-                None
-            )
             
             if (confirmation_subject is None or
                 confirmation_template_name is None or
                 confirmation_template_content is None or
-                confirmation_global_merge_vars is None or
-                confirmation_merge_vars is None or
                 password_reset_subject is None or
                 password_reset_template_name is None or
-                password_reset_template_content is None or
-                password_reset_global_merge_vars is None or
-                    password_reset_merge_vars is None):
+                    password_reset_template_content is None):
                 raise ImproperlyConfigured((
                     "If you enable 'ALLAUTH_USE_MANDRILL_TEMPLATE_EMAIL' "
                     "then you must provide these in your settings {} {} {} "
-                    "{} {} {} {} {} {} {}").format(
+                    "{} {} {}").format(
                     ALLAUTH_MANDRILL_CONFIRMATION_SUBJECT,
                     ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_NAME,
                     ALLAUTH_MANDRILL_CONFIRMATION_TEMPLATE_CONTENT,
-                    ALLAUTH_MANDRILL_CONFIRMATION_GLOBAL_MERGE_VARS,
-                    ALLAUTH_MANDRILL_CONFIRMATION_MERGE_VARS,
                     ALLAUTH_MANDRILL_PASSWORD_RESET_SUBJECT,
                     ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_NAME,
-                    ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT,
-                    ALLAUTH_MANDRILL_PASSWORD_RESET_GLOBAL_MERGE_VARS,
-                    ALLAUTH_MANDRILL_PASSWORD_RESET_MERGE_VARS,
+                    ALLAUTH_MANDRILL_PASSWORD_RESET_TEMPLATE_CONTENT
                     )
                 )
         return use
